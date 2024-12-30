@@ -48,8 +48,9 @@
 
 <div class="container">
     <h1>Color Picker Tool</h1>
+    <!-- Only use a file input to select images -->
     <input type="file" id="imageUpload" accept="image/*">
-    <button id="uploadButton" onclick="uploadImage()">Upload Image</button>
+    <button id="uploadButton" onclick="handleImageUpload()">Upload Image</button>
 
     <div id="imageContainer"></div>
     <canvas id="canvas"></canvas>
@@ -66,7 +67,8 @@
     let ctx = canvas.getContext('2d');
     let imgElement = null;
 
-    function uploadImage() {
+    // Handle the image selection and display it on the canvas
+    function handleImageUpload() {
         let fileInput = document.getElementById('imageUpload');
         let file = fileInput.files[0];
 
@@ -82,6 +84,7 @@
             imgElement.src = e.target.result;
 
             imgElement.onload = function () {
+                // Resize canvas to match image size
                 canvas.width = imgElement.width;
                 canvas.height = imgElement.height;
                 ctx.drawImage(imgElement, 0, 0);
@@ -91,6 +94,7 @@
         reader.readAsDataURL(file);
     }
 
+    // Handle click events on canvas to get the color at the clicked point
     canvas.addEventListener('click', function (event) {
         if (!imgElement) return;
 
@@ -109,6 +113,7 @@
         document.getElementById('colorBox').style.backgroundColor = hex;
     });
 
+    // Helper function to convert RGB to Hex
     function rgbToHex(r, g, b) {
         return `#${(1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1).toUpperCase()}`;
     }
