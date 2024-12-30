@@ -65,7 +65,6 @@
     let canvas = document.getElementById('canvas');
     let ctx = canvas.getContext('2d');
     let imgElement = null;
-    let imagePath = null;
 
     function uploadImage() {
         let fileInput = document.getElementById('imageUpload');
@@ -76,30 +75,20 @@
             return;
         }
 
-        let formData = new FormData();
-        formData.append('file', file);
+        let reader = new FileReader();
 
-        fetch('/upload', {
-            method: 'POST',
-            body: formData
-        }).then(response => response.json()).then(data => {
-            if (data.error) {
-                alert(data.error);
-                return;
-            }
-
-            imagePath = data.file_path;
+        reader.onload = function(e) {
             imgElement = new Image();
-            imgElement.src = imagePath;
+            imgElement.src = e.target.result;
 
             imgElement.onload = function () {
                 canvas.width = imgElement.width;
                 canvas.height = imgElement.height;
                 ctx.drawImage(imgElement, 0, 0);
             };
-        }).catch(error => {
-            console.error(error);
-        });
+        };
+
+        reader.readAsDataURL(file);
     }
 
     canvas.addEventListener('click', function (event) {
@@ -109,26 +98,20 @@
         const x = event.clientX - canvasOffset.left;
         const y = event.clientY - canvasOffset.top;
 
-        fetch('/get_color', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                x: x,
-                y: y,
-                file_path: imagePath
-            })
-        }).then(response => response.json()).then(data => {
-            if (data.error) {
-                alert(data.error);
-                return;
-            }
+        // Get pixel color
+        let pixel = ctx.getImageData(x, y, 1, 1).data;
 
-            document.getElementById('colorInfo').innerHTML = `<p>RGB: ${data.rgb}</p><p>Hex: ${data.hex}</p>`;
-            document.getElementById('colorBox').style.backgroundColor = data.hex;
-        }).catch(error => {
-            console.error(error);
-        });
+        let rgb = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+        let hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+
+        // Display color info
+        document.getElementById('colorInfo').innerHTML = `<p>RGB: ${rgb}</p><p>Hex: ${hex}</p>`;
+        document.getElementById('colorBox').style.backgroundColor = hex;
     });
+
+    function rgbToHex(r, g, b) {
+        return `#${(1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1).toUpperCase()}`;
+    }
 </script>
 
 </body>
